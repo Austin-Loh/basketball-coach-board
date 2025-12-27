@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Basketball Coach Board</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+            touch-action: none;
+        }
+
+        .container {
+            background: white;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        #authPanel {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        #authPanel input {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        #authPanel button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            background: white;
+            color: #667eea;
+            transition: all 0.2s;
+        }
+
+        #authPanel button:hover {
+            background: #f0f0f0;
+        }
+
+        #authUserEmail {
+            color: white;
+            font-weight: 600;
+        }
+
+        .toolbar {
+            background: #f5f5f5;
+            padding: 15px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            z-index: 99;
+            max-height: 35vh;
+            overflow-y: auto;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.2s;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 120px;
+            touch-action: manipulation;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-player {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+        }
+
+        .btn-opponent {
+            background: linear-gradient(135deg, #f44336, #da190b);
+        }
+
+        .btn-draw {
+            background: linear-gradient(135deg, #2196F3, #0b7dda);
+        }
+
+        .btn-clear {
+            background: linear-gradient(135deg, #FF9800, #e68900);
+        }
+
+        .btn-erase {
+            background: linear-gradient(135deg, #9E9E9E, #757575);
+        }
+
+        .btn-arrow {
+            background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+        }
+
+        .btn-tactics {
+            background: linear-gradient(135deg, #00BCD4, #0097A7);
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #4CAF50, #388E3C);
+        }
+
+        .btn.active {
+            box-shadow: 0 0 0 4px #fff, 0 0 0 7px #333;
+            transform: scale(1.05);
+        }
+
+        .court-container {
+            position: relative;
+            flex: 1;
+            background: #d4a574;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+
+        .player {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            cursor: move;
+            user-select: none;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+            font-size: 24px;
+            touch-action: none;
+            z-index: 10;
+        }
+
+        .player.team-player {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            border: 4px solid #2E7D32;
+        }
+
+        .player.team-opponent {
+            background: linear-gradient(135deg, #f44336, #da190b);
+            border: 4px solid #C62828;
+        }
+
+        .player.dragging {
+            opacity: 0.8;
+            transform: scale(1.1);
+            z-index: 1000;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .color-option {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 4px solid transparent;
+            transition: all 0.2s;
+            touch-action: manipulation;
+        }
+
+        .color-option:active {
+            transform: scale(0.9);
+        }
+
+        .color-option.active {
+            border-color: #333;
+            box-shadow: 0 0 0 2px white, 0 0 0 6px #333;
+            transform: scale(1.1);
+        }
+
+        label {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .line-width-control {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .line-width-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 2px solid #333;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+
+        .line-width-btn.active {
+            background: #333;
+        }
+
+        .line-width-btn .dot {
+            background: #333;
+            border-radius: 50%;
+        }
+
+        .line-width-btn.active .dot {
+            background: white;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            color: #333;
+        }
+
+        .close-btn {
+            font-size: 32px;
+            color: #999;
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tactics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .tactic-card {
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 3px solid transparent;
+        }
+
+        .tactic-card:hover, .tactic-card:active {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            border-color: #667eea;
+        }
+
+        .tactic-card h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .tactic-card p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .tactic-card .tactic-type {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .tactic-type.offense {
+            background: #4CAF50;
+        }
+
+        .tactic-type.defense {
+            background: #f44336;
+        }
+
+        .tactic-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .tactic-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .tactic-btn.load {
+            background: #2196F3;
+        }
+
+        .tactic-btn.delete {
+            background: #f44336;
+        }
+
+        .save-modal-content {
+            min-width: 400px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .form-actions button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .form-actions .btn-submit {
+            background: linear-gradient(135deg, #4CAF50, #388E3C);
+            color: white;
+        }
+
+        .form-actions .btn-cancel {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @media (orientation: landscape) {
+            .toolbar {
+                padding: 12px;
+                gap: 10px;
+            }
+            
+            .btn {
+                padding: 12px 20px;
+                font-size: 15px;
+                min-width: 100px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 22px;
+            }
+            
+            .btn {
+                padding: 12px 18px;
+                font-size: 14px;
+                min-width: 90px;
+            }
+            
+            .player {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+
+            .save-modal-content {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Load Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://bljguflepbandlsvhcrt.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_yXdWimtk7P8UBuop-ruPFA_vmznGw-k';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let currentUser = null;
+    
+        async function signUp() {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            if (!email || !password) {
+                alert('Please enter both email and password.');
+                return;
+            }
+            const { data, error } = await supabase.auth.signUp({ email, password });
+            if (error) {
+                alert('Sign up failed: ' + error.message);
+            } else {
+                alert('Sign up successful! Please check your email for confirmation.');
+            }
+        }
+
+        async function signIn() {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) {
+                alert('Sign in failed: ' + error.message);
+            } else {
+                currentUser = data.user;
+                updateAuthUI();
+                await loadTacticsFromSupabase();
+                await loadTeamFromSupabase();
+            }
+        }
+
+        async function signOut() {
+            await supabase.auth.signOut();
+            currentUser = null;
+            updateAuthUI();
+            clearBoard();
+            savedTactics = [];
+        }
+
+        function updateAuthUI() {
+            const authForms = document.getElementById('authForms');
+            const authStatus = document.getElementById('authStatus');
+            const emailSpan = document.getElementById('authUserEmail');
+
+            if (currentUser && currentUser.email) {
+                authForms.style.display = 'none';
+                authStatus.style.display = 'flex';
+                emailSpan.textContent = currentUser.email;
+            } else {
+                authForms.style.display = 'flex';
+                authStatus.style.display = 'none';
+            }
+        }
+
+        // Auto-restore login on page load
+        supabase.auth.getUser().then(({ data }) => {
+            if (data.user) {
+                currentUser = data.user;
+                updateAuthUI();
+                loadTacticsFromSupabase();
+                loadTeamFromSupabase();
+            }
+        });
+
+        // Load tactics from Supabase
+        async function loadTacticsFromSupabase() {
+            if (!currentUser) return;
+
+            const { data, error } = await supabase
+                .from('tactics')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Failed to load tactics:', error);
+                return;
+            }
+
+            savedTactics = data || [];
+        }
+
+        // Load team info from Supabase
+        async function loadTeamFromSupabase() {
+            if (!currentUser) return;
+
+            const { data, error } = await supabase
+                .from('teams')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .maybeSingle();
+
+            if (error) {
+                console.error('Failed to load team:', error);
+                return;
+            }
+
+            if (data) {
+                // You can use data.team_name and data.players here
+                console.log('Team loaded:', data);
+            }
+        }
+    </script>
+
+    <div class="container">
+        <div class="header">
+            <h1>🏀 Basketball Coach Board</h1>
+            <div id="authPanel">
+                <div id="authForms" style="display: flex; gap: 10px; align-items: center;">
+                    <input id="authEmail" type="email" placeholder="Email">
+                    <input id="authPassword" type="password" placeholder="Password">
+                    <button onclick="signUp()">Sign Up</button>
+                    <button onclick="signIn()">Sign In</button>
+                </div>
+                <div id="authStatus" style="display: none; gap: 10px; align-items: center;">
+                    <span style="color: white;">Signed in as <span id="authUserEmail"></span></span>
+                    <button onclick="signOut()">Sign Out</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="toolbar">
+            <button class="btn btn-player" ontouchstart="addPlayer('player')" onclick="addPlayer('player')">➕ Player</button>
+            <button class="btn btn-opponent" ontouchstart="addPlayer('opponent')" onclick="addPlayer('opponent')">➕ Opponent</button>
+            <button class="btn btn-draw" id="drawBtn" ontouchstart="toggleDraw()" onclick="toggleDraw()">✏️ Draw</button>
+            <button class="btn btn-arrow" id="arrowBtn" ontouchstart="toggleArrow()" onclick="toggleArrow()">➡️ Arrow</button>
+            <button class="btn btn-erase" id="eraseBtn" ontouchstart="toggleErase()" onclick="toggleErase()">🧹 Erase</button>
+            
+            <div class="color-picker">
+                <label>Color:</label>
+                <div class="color-option active" style="background: #2196F3;" ontouchstart="setDrawColor('#2196F3')" onclick="setDrawColor('#2196F3')"></div>
+                <div class="color-option" style="background: #000000;" ontouchstart="setDrawColor('#000000')" onclick="setDrawColor('#000000')"></div>
+                <div class="color-option" style="background: #FFEB3B;" ontouchstart="setDrawColor('#FFEB3B')" onclick="setDrawColor('#FFEB3B')"></div>
+                <div class="color-option" style="background: #FF5722;" ontouchstart="setDrawColor('#FF5722')" onclick="setDrawColor('#FF5722')"></div>
+            </div>
+
+            <div class="line-width-control">
+                <label>Size:</label>
+                <button class="line-width-btn" ontouchstart="setLineWidth(3)" onclick="setLineWidth(3)">
+                    <div class="dot" style="width: 8px; height: 8px;"></div>
+                </button>
+                <button class="line-width-btn active" ontouchstart="setLineWidth(5)" onclick="setLineWidth(5)">
+                    <div class="dot" style="width: 12px; height: 12px;"></div>
+                </button>
+                <button class="line-width-btn" ontouchstart="setLineWidth(8)" onclick="setLineWidth(8)">
+                    <div class="dot" style="width: 16px; height: 16px;"></div>
+                </button>
+            </div>
+
+            <button class="btn btn-tactics" ontouchstart="openTacticsModal()" onclick="openTacticsModal()">📋 Tactics</button>
+            <button class="btn btn-save" ontouchstart="openSaveModal()" onclick="openSaveModal()">💾 Save Tactic</button>
+            <button class="btn btn-clear" ontouchstart="clearBoard()" onclick="clearBoard()">🗑️ Clear All</button>
+        </div>
+
+        <div class="court-container" id="courtContainer">
+            <canvas id="canvas"></canvas>
+        </div>
+    </div>
+
+    <!-- Tactics Modal -->
+    <div id="tacticsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📋 Tactics Library</h2>
+                <button class="close-btn" onclick="closeTacticsModal()">&times;</button>
+            </div>
+            <div id="tacticsGrid" class="tactics-grid"></div>
+        </div>
+    </div>
+
+    <!-- Save Tactic Modal -->
+    <div id="saveModal" class="modal">
+        <div class="modal-content save-modal-content">
+            <div class="modal-header">
+                <h2>💾 Save Current Tactic</h2>
+                <button class="close-btn" onclick="closeSaveModal()">&times;</button>
+            </div>
+            <form id="saveForm" onsubmit="saveTactic(event)">
+                <div class="form-group">
+                    <label for="tacticName">Tactic Name *</label>
+                    <input type="text" id="tacticName" required placeholder="e.g., Pick and Roll">
+                </div>
+                <div class="form-group">
+                    <label for="tacticType">Type *</label>
+                    <select id="tacticType" required>
+                        <option value="offense">Offense</option>
+                        <option value="defense">Defense</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="tacticDescription">Description</label>
+                    <textarea id="tacticDescription" placeholder="Brief description of the tactic..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" onclick="closeSaveModal()">Cancel</button>
+                    <button type="submit" class="btn-submit">Save Tactic</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const courtContainer = document.getElementById('courtContainer');
+        
+        let isDrawing = false;
+        let isErasing = false;
+        let isArrowMode = false;
+        let drawColor = '#2196F3';
+        let lineWidth = 5;
+        let playerCount = 1;
+        let opponentCount = 1;
+        let draggedPlayer = null;
+        let offsetX, offsetY;
+        let arrowStart = null;
+        let drawings = [];
+        let players = [];
+
+        // Tactics now loaded from Supabase (initialized as empty)
+        let savedTactics = [];
+
+        // Pre-defined tactics
+        const predefinedTactics = [
+            {
+                name: "Pick and Roll",
+                type: "offense",
+                description: "Classic pick and roll play with ball handler and screener",
+                players: [
+                    { type: 'player', number: 1, x: 0.3, y: 0.5 },
+                    { type: 'player', number: 2, x: 0.4, y: 0.4 },
+                    { type: 'player', number: 3, x: 0.7, y: 0.3 },
+                    { type: 'player', number: 4, x: 0.7, y: 0.7 },
+                    { type: 'player', number: 5, x: 0.5, y: 0.5 }
+                ],
+                drawings: []
+            },
+            {
+                name: "2-3 Zone Defense",
+                type: "defense",
+                description: "Two guards up top, three players in the paint",
+                players: [
+                    { type: 'opponent', number: 1, x: 0.35, y: 0.35 },
+                    { type: 'opponent', number: 2, x: 0.35, y: 0.65 },
+                    { type: 'opponent', number: 3, x: 0.25, y: 0.5 },
+                    { type: 'opponent', number: 4, x: 0.15, y: 0.4 },
+                    { type: 'opponent', number: 5, x: 0.15, y: 0.6 }
+                ],
+                drawings: []
+            },
+            {
+                name: "Fast Break",
+                type: "offense",
+                description: "Quick transition offense with three lanes",
+                players: [
+                    { type: 'player', number: 1, x: 0.5, y: 0.7 },
+                    { type: 'player', number: 2, x: 0.3, y: 0.6 },
+                    { type: 'player', number: 3, x: 0.7, y: 0.6 }
+                ],
+                drawings: [
+                    {
+                        type: 'arrow',
+                        start: { x: 0.5, y: 0.7 },
+                        end: { x: 0.5, y: 0.3 },
+                        color: '#2196F3',
+                        width: 5
+                    },
+                    {
+                        type: 'arrow',
+                        start: { x: 0.3, y: 0.6 },
+                        end: { x: 0.2, y: 0.2 },
+                        color: '#2196F3',
+                        width: 5
+                    },
+                    {
+                        type: 'arrow',
+                        start: { x: 0.7, y: 0.6 },
+                        end: { x: 0.8, y: 0.2 },
+                        color: '#2196F3',
+                        width: 5
+                    }
+                ]
+            },
+            {
+                name: "Man-to-Man Defense",
+                type: "defense",
+                description: "Each defender guards one offensive player",
+                players: [
+                    { type: 'player', number: 1, x: 0.5, y: 0.5 },
+                    { type: 'player', number: 2, x: 0.4, y: 0.4 },
+                    { type: 'player', number: 3, x: 0.6, y: 0.4 },
+                    { type: 'player', number: 4, x: 0.4, y: 0.6 },
+                    { type: 'player', number: 5, x: 0.6, y: 0.6 },
+                    { type: 'opponent', number: 1, x: 0.45, y: 0.5 },
+                    { type: 'opponent', number: 2, x: 0.35, y: 0.4 },
+                    { type: 'opponent', number: 3, x: 0.55, y: 0.4 },
+                    { type: 'opponent', number: 4, x: 0.35, y: 0.6 },
+                    { type: 'opponent', number: 5, x: 0.55, y: 0.6 }
+                ],
+                drawings: []
+            },
+            {
+                name: "Triangle Offense",
+                type: "offense",
+                description: "Triangle formation on strong side",
+                players: [
+                    { type: 'player', number: 1, x: 0.5, y: 0.3 },
+                    { type: 'player', number: 2, x: 0.3, y: 0.5 },
+                    { type: 'player', number: 3, x: 0.2, y: 0.3 },
+                    { type: 'player', number: 4, x: 0.7, y: 0.5 },
+                    { type: 'player', number: 5, x: 0.2, y: 0.7 }
+                ],
+                drawings: []
+            },
+            {
+                name: "Full Court Press",
+                type: "defense",
+                description: "Aggressive full court defensive pressure",
+                players: [
+                    { type: 'opponent', number: 1, x: 0.5, y: 0.85 },
+                    { type: 'opponent', number: 2, x: 0.3, y: 0.75 },
+                    { type: 'opponent', number: 3, x: 0.7, y: 0.75 },
+                    { type: 'opponent', number: 4, x: 0.4, y: 0.6 },
+                    { type: 'opponent', number: 5, x: 0.6, y: 0.6 }
+                ],
+                drawings: []
+            }
+        ];
+
+        // Set canvas size
+        function resizeCanvas() {
+            const rect = courtContainer.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            redrawAll();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(resizeCanvas, 100);
+        });
+        resizeCanvas();
+
+        // Draw basketball court
+        function drawCourt() {
+            const w = canvas.width;
+            const h = canvas.height;
+            const margin = Math.min(w, h) * 0.03;
+
+            ctx.fillStyle = '#d4a574';
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = Math.max(2, Math.min(w, h) * 0.004);
+
+            ctx.strokeRect(margin, margin, w - margin * 2, h - margin * 2);
+
+            ctx.beginPath();
+            ctx.moveTo(w / 2, margin);
+            ctx.lineTo(w / 2, h - margin);
+            ctx.stroke();
+
+            const centerRadius = Math.min(w, h) * 0.08;
+            ctx.beginPath();
+            ctx.arc(w / 2, h / 2, centerRadius, 0, Math.PI * 2);
+            ctx.stroke();
+
+            const threePointRadius = Math.min(w, h) * 0.25;
+            const hoopX = w * 0.12;
+            
+            ctx.beginPath();
+            ctx.arc(hoopX, h / 2, threePointRadius, -Math.PI/2, Math.PI/2);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(w - hoopX, h / 2, threePointRadius, Math.PI/2, -Math.PI/2);
+            ctx.stroke();
+
+            const paintWidth = w * 0.15;
+            const paintHeight = h * 0.35;
+            ctx.strokeRect(margin, h / 2 - paintHeight / 2, paintWidth, paintHeight);
+            ctx.strokeRect(w - margin - paintWidth, h / 2 - paintHeight / 2, paintWidth, paintHeight);
+
+            const hoopRadius = Math.min(w, h) * 0.015;
+            ctx.beginPath();
+            ctx.arc(margin + hoopRadius * 2, h / 2, hoopRadius, 0, Math.PI * 2);
+            ctx.fillStyle = '#FF5722';
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(w - margin - hoopRadius * 2, h / 2, hoopRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        function redrawAll() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawCourt();
+            
+            drawings.forEach(drawing => {
+                if (drawing.type === 'line') {
+                    ctx.beginPath();
+                    ctx.moveTo(drawing.points[0].x, drawing.points[0].y);
+                    for (let i = 1; i < drawing.points.length; i++) {
+                        ctx.lineTo(drawing.points[i].x, drawing.points[i].y);
+                    }
+                    ctx.strokeStyle = drawing.color;
+                    ctx.lineWidth = drawing.width;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.stroke();
+                } else if (drawing.type === 'arrow') {
+                    drawArrow(drawing.start.x, drawing.start.y, drawing.end.x, drawing.end.y, drawing.color, drawing.width);
+                }
+            });
+        }
+
+        let currentPath = null;
+
+        function getCoordinates(e) {
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches ? e.touches[0] : e;
+            return {
+                x: (touch.clientX - rect.left) * (canvas.width / rect.width),
+                y: (touch.clientY - rect.top) * (canvas.height / rect.height)
+            };
+        }
+
+        function startDrawing(e) {
+            if (!isDrawing && !isErasing && !isArrowMode) return;
+            e.preventDefault();
+            
+            const coords = getCoordinates(e);
+            
+            if (isArrowMode) {
+                arrowStart = coords;
+            } else if (isDrawing) {
+                currentPath = {
+                    type: 'line',
+                    points: [coords],
+                    color: drawColor,
+                    width: lineWidth
+                };
+            } else if (isErasing) {
+                erase(coords.x, coords.y);
+            }
+        }
+
+        function draw(e) {
+            if (!isDrawing && !isErasing && !isArrowMode) return;
+            e.preventDefault();
+            
+            const coords = getCoordinates(e);
+            
+            if (isErasing) {
+                erase(coords.x, coords.y);
+            } else if (isDrawing && currentPath) {
+                currentPath.points.push(coords);
+                
+                ctx.beginPath();
+                const lastPoint = currentPath.points[currentPath.points.length - 2];
+                ctx.moveTo(lastPoint.x, lastPoint.y);
+                ctx.lineTo(coords.x, coords.y);
+                ctx.strokeStyle = drawColor;
+                ctx.lineWidth = lineWidth;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.stroke();
+            }
+        }
+
+        function stopDrawing(e) {
+            if (isArrowMode && arrowStart) {
+                e.preventDefault();
+                const coords = getCoordinates(e);
+                const arrow = {
+                    type: 'arrow',
+                    start: arrowStart,
+                    end: coords,
+                    color: drawColor,
+                    width: lineWidth
+                };
+                drawings.push(arrow);
+                drawArrow(arrowStart.x, arrowStart.y, coords.x, coords.y, drawColor, lineWidth);
+                arrowStart = null;
+            } else if (currentPath && currentPath.points.length > 1) {
+                drawings.push(currentPath);
+                currentPath = null;
+            }
+        }
+
+        function drawArrow(fromX, fromY, toX, toY, color, width) {
+            const headLength = Math.max(15, width * 4);
+            const angle = Math.atan2(toY - fromY, toX - fromX);
+
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(toX - headLength * Math.cos(angle - Math.PI / 6), toY - headLength * Math.sin(angle - Math.PI / 6));
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(toX - headLength * Math.cos(angle + Math.PI / 6), toY - headLength * Math.sin(angle + Math.PI / 6));
+            ctx.stroke();
+        }
+
+        function erase(x, y) {
+            const eraseRadius = 30;
+            drawings = drawings.filter(drawing => {
+                if (drawing.type === 'line') {
+                    return !drawing.points.some(point => 
+                        Math.hypot(point.x - x, point.y - y) < eraseRadius
+                    );
+                } else if (drawing.type === 'arrow') {
+                    return Math.hypot(drawing.start.x - x, drawing.start.y - y) > eraseRadius &&
+                           Math.hypot(drawing.end.x - x, drawing.end.y - y) > eraseRadius;
+                }
+                return true;
+            });
+            redrawAll();
+        }
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('touchstart', startDrawing, { passive: false });
+        canvas.addEventListener('touchmove', draw, { passive: false });
+        canvas.addEventListener('touchend', stopDrawing, { passive: false });
+
+        function toggleDraw() {
+            isDrawing = !isDrawing;
+            isErasing = false;
+            isArrowMode = false;
+            document.getElementById('drawBtn').classList.toggle('active');
+            document.getElementById('eraseBtn').classList.remove('active');
+            document.getElementById('arrowBtn').classList.remove('active');
+        }
+
+        function toggleArrow() {
+            isArrowMode = !isArrowMode;
+            isDrawing = false;
+            isErasing = false;
+            document.getElementById('arrowBtn').classList.toggle('active');
+            document.getElementById('drawBtn').classList.remove('active');
+            document.getElementById('eraseBtn').classList.remove('active');
+        }
+
+        function toggleErase() {
+            isErasing = !isErasing;
+            isDrawing = false;
+            isArrowMode = false;
+            document.getElementById('eraseBtn').classList.toggle('active');
+            document.getElementById('drawBtn').classList.remove('active');
+            document.getElementById('arrowBtn').classList.remove('active');
+        }
+
+        function setDrawColor(color) {
+            drawColor = color;
+            document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function setLineWidth(width) {
+            lineWidth = width;
+            document.querySelectorAll('.line-width-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.closest('.line-width-btn').classList.add('active');
+        }
+
+        function addPlayer(type) {
+            const player = document.createElement('div');
+            player.className = `player team-${type === 'player' ? 'player' : 'opponent'}`;
+            const number = type === 'player' ? playerCount++ : opponentCount++;
+            player.textContent = number;
+            player.style.left = '50%';
+            player.style.top = '50%';
+            player.dataset.type = type;
+            player.dataset.number = number;
+            
+            player.addEventListener('mousedown', startDrag);
+            player.addEventListener('touchstart', startDrag, { passive: false });
+            
+            courtContainer.appendChild(player);
+            players.push(player);
+        }
+
+        function startDrag(e) {
+            e.preventDefault();
+            draggedPlayer = e.target;
+            draggedPlayer.classList.add('dragging');
+            
+            const touch = e.touches ? e.touches[0] : e;
+            const rect = draggedPlayer.getBoundingClientRect();
+            offsetX = touch.clientX - rect.left;
+            offsetY = touch.clientY - rect.top;
+            
+            document.addEventListener('mousemove', dragPlayer);
+            document.addEventListener('mouseup', stopDrag);
+            document.addEventListener('touchmove', dragPlayer, { passive: false });
+            document.addEventListener('touchend', stopDrag);
+        }
+
+        function dragPlayer(e) {
+            if (!draggedPlayer) return;
+            e.preventDefault();
+            
+            const touch = e.touches ? e.touches[0] : e;
+            const container = courtContainer;
+            const rect = container.getBoundingClientRect();
+            
+            let x = touch.clientX - rect.left - offsetX;
+            let y = touch.clientY - rect.top - offsetY;
+            
+            x = Math.max(0, Math.min(x, rect.width - 60));
+            y = Math.max(0, Math.min(y, rect.height - 60));
+            
+            draggedPlayer.style.left = x + 'px';
+            draggedPlayer.style.top = y + 'px';
+        }
+
+        function stopDrag() {
+            if (draggedPlayer) {
+                draggedPlayer.classList.remove('dragging');
+            }
+            draggedPlayer = null;
+            document.removeEventListener('mousemove', dragPlayer);
+            document.removeEventListener('mouseup', stopDrag);
+            document.removeEventListener('touchmove', dragPlayer);
+            document.removeEventListener('touchend', stopDrag);
+        }
+
+        function clearBoard() {
+            drawings = [];
+            redrawAll();
+            document.querySelectorAll('.player').forEach(p => p.remove());
+            players = [];
+            playerCount = 1;
+            opponentCount = 1;
+            isDrawing = false;
+            isErasing = false;
+            isArrowMode = false;
+            document.getElementById('drawBtn').classList.remove('active');
+            document.getElementById('eraseBtn').classList.remove('active');
+            document.getElementById('arrowBtn').classList.remove('active');
+        }
+
+        // Tactics Modal Functions
+        function openTacticsModal() {
+            const modal = document.getElementById('tacticsModal');
+            modal.classList.add('show');
+            renderTactics();
+        }
+
+        function closeTacticsModal() {
+            const modal = document.getElementById('tacticsModal');
+            modal.classList.remove('show');
+        }
+
+        function renderTactics() {
+            const grid = document.getElementById('tacticsGrid');
+            const allTactics = [...predefinedTactics, ...savedTactics];
+            
+            if (allTactics.length === predefinedTactics.length) {
+                grid.innerHTML = allTactics.map((tactic, index) => `
+                    <div class="tactic-card">
+                        <h3>${tactic.name}</h3>
+                        <span class="tactic-type ${tactic.type}">${tactic.type.toUpperCase()}</span>
+                        <p>${tactic.description || 'No description'}</p>
+                        <div class="tactic-actions">
+                            <button class="tactic-btn load" onclick="loadTactic(${index}, false)">Load</button>
+                        </div>
+                    </div>
+                `).join('') + '<p style="text-align: center; color: #999; padding: 40px; grid-column: 1/-1;">Sign in to save your own tactics!</p>';
+                return;
+            }
+
+            grid.innerHTML = allTactics.map((tactic, index) => `
+                <div class="tactic-card">
+                    <h3>${tactic.name}</h3>
+                    <span class="tactic-type ${tactic.type}">${tactic.type.toUpperCase()}</span>
+                    <p>${tactic.description || 'No description'}</p>
+                    <div class="tactic-actions">
+                        <button class="tactic-btn load" onclick="loadTactic(${index}, ${index >= predefinedTactics.length})">Load</button>
+                        ${index >= predefinedTactics.length ? `<button class="tactic-btn delete" onclick="deleteTactic('${tactic.id}')">Delete</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadTactic(index, isCustom) {
+            const tactic = isCustom ? savedTactics[index - predefinedTactics.length] : predefinedTactics[index];
+            
+            clearBoard();
+            
+            const rect = courtContainer.getBoundingClientRect();
+            
+            // Load players
+            tactic.players.forEach(playerData => {
+                const player = document.createElement('div');
+                player.className = `player team-${playerData.type === 'player' ? 'player' : 'opponent'}`;
+                player.textContent = playerData.number;
+                player.style.left = (playerData.x * rect.width) + 'px';
+                player.style.top = (playerData.y * rect.height) + 'px';
+                player.dataset.type = playerData.type;
+                player.dataset.number = playerData.number;
+                
+                player.addEventListener('mousedown', startDrag);
+                player.addEventListener('touchstart', startDrag, { passive: false });
+                
+                courtContainer.appendChild(player);
+                players.push(player);
+                
+                if (playerData.type === 'player') {
+                    playerCount = Math.max(playerCount, playerData.number + 1);
+                } else {
+                    opponentCount = Math.max(opponentCount, playerData.number + 1);
+                }
+            });
+            
+            // Load drawings
+            tactic.drawings.forEach(drawing => {
+                if (drawing.type === 'arrow') {
+                    drawings.push({
+                        type: 'arrow',
+                        start: {
+                            x: drawing.start.x * canvas.width,
+                            y: drawing.start.y * canvas.height
+                        },
+                        end: {
+                            x: drawing.end.x * canvas.width,
+                            y: drawing.end.y * canvas.height
+                        },
+                        color: drawing.color,
+                        width: drawing.width
+                    });
+                } else if (drawing.type === 'line') {
+                    drawings.push({
+                        type: 'line',
+                        points: drawing.points.map(p => ({
+                            x: p.x * canvas.width,
+                            y: p.y * canvas.height
+                        })),
+                        color: drawing.color,
+                        width: drawing.width
+                    });
+                }
+            });
+            
+            redrawAll();
+            closeTacticsModal();
+        }
+
+        async function deleteTactic(tacticId) {
+            if (!currentUser) {
+                alert('Please sign in to delete tactics.');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to delete this tactic?')) return;
+
+            const { error } = await supabase
+                .from('tactics')
+                .delete()
+                .eq('id', tacticId);
+
+            if (error) {
+                alert('Delete failed: ' + error.message);
+                return;
+            }
+
+            // Remove from local array
+            savedTactics = savedTactics.filter(t => t.id !== tacticId);
+            renderTactics();
+        }
+
+        // Save Tactic Modal Functions
+        function openSaveModal() {
+            if (!currentUser) {
+                alert('Please sign in to save tactics.');
+                return;
+            }
+
+            if (players.length === 0 && drawings.length === 0) {
+                alert('Please add players or drawings before saving a tactic.');
+                return;
+            }
+            const modal = document.getElementById('saveModal');
+            modal.classList.add('show');
+        }
+
+        function closeSaveModal() {
+            const modal = document.getElementById('saveModal');
+            modal.classList.remove('show');
+            document.getElementById('saveForm').reset();
+        }
+
+        async function saveTactic(e) {
+            e.preventDefault();
+
+            if (!currentUser) {
+                alert('Please sign in to save tactics.');
+                return;
+            }
+            
+            const name = document.getElementById('tacticName').value;
+            const type = document.getElementById('tacticType').value;
+            const description = document.getElementById('tacticDescription').value;
+            
+            const rect = courtContainer.getBoundingClientRect();
+            
+            // Save player positions (normalized 0-1)
+            const playersData = Array.from(document.querySelectorAll('.player')).map(player => ({
+                type: player.dataset.type,
+                number: parseInt(player.dataset.number),
+                x: parseFloat(player.style.left) / rect.width,
+                y: parseFloat(player.style.top) / rect.height
+            }));
+            
+            // Save drawings (normalized 0-1)
+            const drawingsData = drawings.map(drawing => {
+                if (drawing.type === 'arrow') {
+                    return {
+                        type: 'arrow',
+                        start: {
+                            x: drawing.start.x / canvas.width,
+                            y: drawing.start.y / canvas.height
+                        },
+                        end: {
+                            x: drawing.end.x / canvas.width,
+                            y: drawing.end.y / canvas.height
+                        },
+                        color: drawing.color,
+                        width: drawing.width
+                    };
+                } else if (drawing.type === 'line') {
+                    return {
+                        type: 'line',
+                        points: drawing.points.map(p => ({
+                            x: p.x / canvas.width,
+                            y: p.y / canvas.height
+                        })),
+                        color: drawing.color,
+                        width: drawing.width
+                    };
+                }
+            });
+            
+            const tacticRow = {
+                user_id: currentUser.id,
+                name,
+                type,
+                description,
+                players: playersData,
+                drawings: drawingsData
+            };
+
+            const { data, error } = await supabase
+                .from('tactics')
+                .insert(tacticRow)
+                .select()
+                .single();
+
+            if (error) {
+                console.error('Save failed:', error);
+                alert('Save failed: ' + error.message);
+                return;
+            }
+
+            savedTactics.unshift(data);
+            closeSaveModal();
+            alert('Tactic saved to cloud successfully!');
+        }
+
+        // Prevent default touch behaviors
+        document.body.addEventListener('touchmove', (e) => {
+            if (e.target === canvas || e.target.classList.contains('player')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const tacticsModal = document.getElementById('tacticsModal');
+            const saveModal = document.getElementById('saveModal');
+            if (event.target === tacticsModal) {
+                closeTacticsModal();
+            }
+            if (event.target === saveModal) {
+                closeSaveModal();
+            }
+        }
+    </script>
+</body>
+</html>
